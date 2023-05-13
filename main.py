@@ -1,11 +1,6 @@
-import pandas
-from reconhecimento_facial import *
-from reconhecimento_audio import *
+from reconhecimento_facial import camera, webcam, cv2
 
 
-if validador_planilha == 1:
-    pass
-else:
-    print("Rosto não identificado")
-
-audio()
+camera()
+webcam.release()
+cv2.destroyAllWindows()
