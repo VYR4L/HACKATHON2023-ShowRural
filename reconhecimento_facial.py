@@ -15,11 +15,14 @@ def camera():
     df_funcionarios = pd.read_excel('/home/vyral/Vídeos/Face_recognizer/Funcionarios.xlsx')
     df_convidados = pd.read_excel('/home/vyral/Vídeos/Face_recognizer/Convidados.xlsx')
 
-    wb = load_workbook('/home/vyral/Vídeos/Face_recognizer/teste.xlsx')
-    ws = wb.active
+    wbf = load_workbook('/home/vyral/Vídeos/Face_recognizer/Funcionarios.xlsx')
+    wbc = load_workbook('/home/vyral/Vídeos/Face_recognizer/Convidados.xlsx')
 
-    linha_funcionarios_xlsx = ws.max_row + 1
-    linha_convidados_xlsx = ws.max_row + 1
+    wsf = wbf.active
+    wsc = wbc.active
+
+    linha_funcionarios_xlsx = wsf.max_row + 1
+    linha_convidados_xlsx = wsc.max_row + 1
 
     imagens_referencia = []
 
@@ -69,9 +72,9 @@ def camera():
                     nome_funcionario_reconhecido = nome_sem_extensao
                 if rosto_reconhecido:
                     imagem_funcionario = Image(f"/home/vyral/Vídeos/Face_recognizer/funcionarios/{nome_funcionario_reconhecido}.jpg")
-                    ws['A'+ str(linha_funcionarios_xlsx)] = nome_funcionario_reconhecido
-                    ws.add_image(imagem_funcionario, 'B' + str(linha_funcionarios_xlsx))
-                    ws['C' + str(linha_funcionarios_xlsx)] = datetime.now()
+                    wsf['A'+ str(linha_funcionarios_xlsx)] = nome_funcionario_reconhecido
+                    wsf.add_image(imagem_funcionario, 'B' + str(linha_funcionarios_xlsx))
+                    wsf['C' + str(linha_funcionarios_xlsx)] = datetime.now()
                     linha_funcionarios_xlsx += 1
                     time.sleep(3)
 
@@ -88,14 +91,13 @@ def camera():
                             imagem_convidado = f"/home/vyral/Vídeos/Face_recognizer/convidados/{nome_convidado}.jpg"
                             imagem_convidado_p = Image(imagem_convidado)
                             cv2.imwrite(imagem_convidado, frame_convidado)
-                            ws['A' + str(linha_convidados_xlsx)] = nome_convidado
-                            ws.add_image(imagem_convidado_p, 'B' + str(linha_convidados_xlsx))
-                            ws['C' + str(linha_convidados_xlsx)] = datetime.now()
+                            wsc['A' + str(linha_convidados_xlsx)] = nome_convidado
+                            wsc.add_image(imagem_convidado_p, 'B' + str(linha_convidados_xlsx))
+                            wsc['C' + str(linha_convidados_xlsx)] = datetime.now()
                             linha_convidados_xlsx += 1
 
         if cv2.waitKey(1) == 27:  # ESC
             rodando = False
 
-    wb.save('/home/vyral/Vídeos/Face_recognizer/Funcionarios.xlsx')
-    wb.save('/home/vyral/Vídeos/Face_recognizer/Convidados.xlsx')
-
+    wbf.save('/home/vyral/Vídeos/Face_recognizer/Funcionarios.xlsx')
+    wbc.save('/home/vyral/Vídeos/Face_recognizer/Convidados.xlsx')
