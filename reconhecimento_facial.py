@@ -1,7 +1,10 @@
 import os
 import cv2
-import face_recognition
+import time
 import pandas as pd
+import face_recognition
+from datetime import datetime
+from openpyxl.drawing.image import Image
 from openpyxl import Workbook, load_workbook
 
 
@@ -14,8 +17,9 @@ def camera():
 
     wb = load_workbook('/home/vyral/Vídeos/Face_recognizer/teste.xlsx')
     ws = wb.active
-    my_headder = []
 
+    linha_funcionarios_xlsx = ws.max_row + 1
+    linha_convidados_xlsx = ws.max_row + 1
 
     imagens_referencia = []
 
@@ -38,8 +42,8 @@ def camera():
             
     visitas = ''
     nao_reconhece = 0
-    convidados = []
-    while webcam.isOpened():
+    rodando = True
+    while rodando:
         validacao, frame = webcam.read()
         if not validacao:
             break
@@ -62,25 +66,36 @@ def camera():
                 if distancia < 0.5:
                     print("Rosto reconhecido")
                     rosto_reconhecido = True
-                    break
-            if rosto_reconhecido:
-                break
+                    nome_funcionario_reconhecido = nome_sem_extensao
+                if rosto_reconhecido:
+                    imagem_funcionario = Image(f"/home/vyral/Vídeos/Face_recognizer/funcionarios/{nome_funcionario_reconhecido}.jpg")
+                    ws['A'+ str(linha_funcionarios_xlsx)] = nome_funcionario_reconhecido
+                    ws.add_image(imagem_funcionario, 'B' + str(linha_funcionarios_xlsx))
+                    ws['C' + str(linha_funcionarios_xlsx)] = datetime.now()
+                    linha_funcionarios_xlsx += 1
+                    time.sleep(3)
 
-        # Se nenhum rosto reconhecido foi encontrado, pergunte ao usuário se ele quer entrar como visitante
-        if not rosto_reconhecido:
-            nao_reconhece += 1
-            if nao_reconhece == len(imagens_referencia):
-                print("Rosto não reconhecido, deseja entrar como visitante?(S/N)")
-                visitas = input().lower()
-                if visitas == 's':
-                    for i in range(nao_reconhece):
-                        nome_convidado = input("Digite o nome completo do visitante: ")
-                        convidados.append(nome_convidado)
-                        my_headder.append('A'[i+1])
-                        ws[i].fill = nome_convidado[i+1]
+            if not rosto_reconhecido:
+                nao_reconhece += 1
+                if nao_reconhece == len(imagens_referencia):
+                    print("Rosto não reconhecido, deseja entrar como visitante?(S/N)")
+                    visitas = input().lower()
+                    if visitas == 's':
+                        for i in range(nao_reconhece):
+                            nome_convidado = input("Digite o nome completo do visitante: ")
+                            ret, frame_convidado = webcam.read()
+                            cv2.imwrite(f"/home/vyral/Vídeos/Face_recognizer/convidados/{nome_convidado}.jpg", frame_convidado)
+                            imagem_convidado = f"/home/vyral/Vídeos/Face_recognizer/convidados/{nome_convidado}.jpg"
+                            imagem_convidado_p = Image(imagem_convidado)
+                            cv2.imwrite(imagem_convidado, frame_convidado)
+                            ws['A' + str(linha_convidados_xlsx)] = nome_convidado
+                            ws.add_image(imagem_convidado_p, 'B' + str(linha_convidados_xlsx))
+                            ws['C' + str(linha_convidados_xlsx)] = datetime.now()
+                            linha_convidados_xlsx += 1
+
         if cv2.waitKey(1) == 27:  # ESC
-            break
+            rodando = False
 
-# Libera a memória
-webcam.release()
-cv2.destroyAllWindows()
+    wb.save('/home/vyral/Vídeos/Face_recognizer/Funcionarios.xlsx')
+    wb.save('/home/vyral/Vídeos/Face_recognizer/Convidados.xlsx')
+
