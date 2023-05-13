@@ -95,6 +95,7 @@ def camera():
                             wsc.add_image(imagem_convidado_p, 'B' + str(linha_convidados_xlsx))
                             wsc['C' + str(linha_convidados_xlsx)] = datetime.now()
                             linha_convidados_xlsx += 1
+                            time.sleep(3)
 
         if cv2.waitKey(1) == 27:  # ESC
             rodando = False
