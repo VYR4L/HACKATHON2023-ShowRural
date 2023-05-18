@@ -118,8 +118,10 @@ def fechar_programa():
     global encerrar_programa
     encerrar_programa = True
     janela.quit()
+    webcam.release()
+    cv2.destroyAllWindows()
 
-
+    
 botao_fechar = tk.Button(janela, text="Fechar", command=fechar_programa)
 botao_fechar.pack()
 botao_fechar.place(x=240, y=500)
