@@ -1,20 +1,18 @@
 import os
 import cv2
-import time
-import pandas as pd
+import threading
+import tkinter as tk
 import face_recognition
 from datetime import datetime
-from openpyxl.drawing.image import Image
+from PIL import Image, ImageTk
 from openpyxl import Workbook, load_workbook
 
 
 # Conecta a webcam
 webcam = cv2.VideoCapture(0)
-
+encerrar_programa = False
 def camera():
-    df_funcionarios = pd.read_excel('/home/vyral/Vídeos/Face_recognizer/Funcionarios.xlsx')
-    df_convidados = pd.read_excel('/home/vyral/Vídeos/Face_recognizer/Convidados.xlsx')
-
+    global encerrar_programa
     wbf = load_workbook('/home/vyral/Vídeos/Face_recognizer/Funcionarios.xlsx')
     wbc = load_workbook('/home/vyral/Vídeos/Face_recognizer/Convidados.xlsx')
 
@@ -26,35 +24,32 @@ def camera():
 
     imagens_referencia = []
 
-    # Procura em uma pasta específica o número de imagens, sempre nomeados com: rosto_salvo_i
-    # Onde i = número da imagem, sempre em ordem crescente começando do 0
-    for arquivo in os.listdir("/home/vyral/Vídeos/Face_recognizer/funcionarios"):
+    while not encerrar_programa:
+        # Adiciona as imagens de funcionários à lista de imagens de referência
+        for arquivo in os.listdir("/home/vyral/Vídeos/Face_recognizer/funcionarios"):
+            if arquivo.endswith(".jpg"):
+                nome_sem_extensao = os.path.splitext(arquivo)[0]
+                imagem_referencia = face_recognition.load_image_file(os.path.join("/home/vyral/Vídeos/Face_recognizer/funcionarios", arquivo))
+                features_referencia = face_recognition.face_encodings(imagem_referencia)[0]
+                imagens_referencia.append(features_referencia)
 
-        # Verifica se o arquivo é uma imagem
-        if arquivo.endswith(".jpg"):
-            nome_sem_extensao = os.path.splitext(arquivo)[0]
-            imagem_referencia = face_recognition.load_image_file(os.path.join("/home/vyral/Vídeos/Face_recognizer/funcionarios", arquivo))
-            features_referencia = face_recognition.face_encodings(imagem_referencia)[0]
-            imagens_referencia.append(features_referencia)
-
-        imagens_referencia = [face_recognition.face_encodings(face_recognition.load_image_file(os.path.join("/home/vyral/Vídeos/Face_recognizer/funcionarios", f"{nome_sem_extensao}.jpg")))[0] for i in range(len(imagens_referencia))]
-        if nome_sem_extensao not in df_funcionarios and nome_sem_extensao not in df_convidados:
-        # Adicionar nome à planilha de convidados
-            novo_registro = [{'Nome': nome_sem_extensao}]
-            df_convidados = pd.concat([df_convidados, pd.DataFrame(novo_registro)], ignore_index=True)
+        # Adiciona as imagens de convidados à lista de imagens de referência
+        for arquivo in os.listdir("/home/vyral/Vídeos/Face_recognizer/convidados"):
+            if arquivo.endswith(".jpg"):
+                nome_sem_extensao = os.path.splitext(arquivo)[0]
+                imagem_referencia = face_recognition.load_image_file(os.path.join("/home/vyral/Vídeos/Face_recognizer/convidados", arquivo))
+                features_referencia = face_recognition.face_encodings(imagem_referencia)[0]
+                imagens_referencia.append(features_referencia)
             
-    visitas = ''
-    nao_reconhece = 0
-    rodando = True
-    while rodando:
+                
+        visitas = ''
+        nao_reconhece = 0
+
         validacao, frame = webcam.read()
-        if not validacao:
-            break
 
         # Converte a imagem da webcam para o padrão RGB
         imagem = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        cv2.imshow("Rosto", frame)
-
+        
         # Encontra todos os rostos na imagem da webcam
         rostos = face_recognition.face_locations(imagem)
 
@@ -71,12 +66,10 @@ def camera():
                     rosto_reconhecido = True
                     nome_funcionario_reconhecido = nome_sem_extensao
                 if rosto_reconhecido:
-                    imagem_funcionario = Image(f"/home/vyral/Vídeos/Face_recognizer/funcionarios/{nome_funcionario_reconhecido}.jpg")
                     wsf['A'+ str(linha_funcionarios_xlsx)] = nome_funcionario_reconhecido
-                    wsf.add_image(imagem_funcionario, 'B' + str(linha_funcionarios_xlsx))
-                    wsf['C' + str(linha_funcionarios_xlsx)] = datetime.now()
+                    wsf['B' + str(linha_funcionarios_xlsx)] = datetime.now()
                     linha_funcionarios_xlsx += 1
-                    time.sleep(3)
+                    wbf.save('/home/vyral/Vídeos/Face_recognizer/Funcionarios.xlsx')
 
             if not rosto_reconhecido:
                 nao_reconhece += 1
@@ -88,17 +81,45 @@ def camera():
                             nome_convidado = input("Digite o nome completo do visitante: ")
                             ret, frame_convidado = webcam.read()
                             cv2.imwrite(f"/home/vyral/Vídeos/Face_recognizer/convidados/{nome_convidado}.jpg", frame_convidado)
-                            imagem_convidado = f"/home/vyral/Vídeos/Face_recognizer/convidados/{nome_convidado}.jpg"
-                            imagem_convidado_p = Image(imagem_convidado)
-                            cv2.imwrite(imagem_convidado, frame_convidado)
                             wsc['A' + str(linha_convidados_xlsx)] = nome_convidado
-                            wsc.add_image(imagem_convidado_p, 'B' + str(linha_convidados_xlsx))
-                            wsc['C' + str(linha_convidados_xlsx)] = datetime.now()
+                            wsc['B' + str(linha_convidados_xlsx)] = datetime.now()
                             linha_convidados_xlsx += 1
-                            time.sleep(3)
+                            wbc.save('/home/vyral/Vídeos/Face_recognizer/Convidados.xlsx')
+        
+        
 
-        if cv2.waitKey(1) == 27:  # ESC
-            rodando = False
+def exibir_frame():
+    ret, frame = webcam.read()
+    if ret:
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        imagem = Image.fromarray(frame_rgb)
+        imagem = ImageTk.PhotoImage(imagem)
+        label_imagem.configure(image=imagem)
+        label_imagem.image = imagem
+    janela.after(10, exibir_frame)
 
-    wbf.save('/home/vyral/Vídeos/Face_recognizer/Funcionarios.xlsx')
-    wbc.save('/home/vyral/Vídeos/Face_recognizer/Convidados.xlsx')
+
+fim_do_prrograma = False
+janela = tk.Tk()
+janela.title("Interface Gráfica")
+largura_tela = janela.winfo_screenwidth()
+altura_tela = janela.winfo_screenheight()
+janela.geometry(f"{largura_tela}x{altura_tela}")
+
+frame_webcam = tk.Frame(janela, width=480, height=360)
+label_imagem = tk.Label(frame_webcam)
+label_imagem.pack()
+
+frame_webcam.place(x=0, y=0)
+
+face_thread = threading.Thread(target=camera)
+
+def fechar_programa():
+    global encerrar_programa
+    encerrar_programa = True
+    janela.quit()
+
+
+botao_fechar = tk.Button(janela, text="Fechar", command=fechar_programa)
+botao_fechar.pack()
+botao_fechar.place(x=240, y=500)
