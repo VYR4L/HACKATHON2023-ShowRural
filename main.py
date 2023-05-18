@@ -1,6 +1,6 @@
-from reconhecimento_facial import camera, webcam, cv2
+from reconhecimento_facial import camera, face_thread, exibir_frame, janela
 
 
-camera()
-webcam.release()
-cv2.destroyAllWindows()
+face_thread.start()
+exibir_frame()
+janela.mainloop()
