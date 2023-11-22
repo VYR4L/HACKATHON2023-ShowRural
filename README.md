@@ -13,6 +13,6 @@ The challenge is: How to ensure that the bath was taken respecting each person's
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Solution Developed: Taking into account the privacy of employees, it was proposed to use facial recognition when entering and exiting the bathrooms. This way, we can control who entered the bathrooms, and also have time control, once someone is “captured”, the entry and exit time is stored, so we can calculate the approximate time each person takes in the shower. The system is also capable of create visitors which must pass through the same process.
 
-The code is now changing to it's Oriented Object Version.
+The code is now changing to its Oriented Object Version.
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
