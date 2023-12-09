@@ -12,15 +12,6 @@ DB_FILE = ROOT_DIR / DB_NAME
 app = sa.create_engine(f'sqlite:///{DB_NAME}')
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=app)
 
-db = SessionLocal()
-if not DB_FILE.exists():
-    with app.app_context():
-        sa.create_all()
-        print('#################')
-        print('Created Database!')
-        print('#################')
-        Base.metadata.create_all(app)
-
 
 class Employee(Base):
     __tablename__ = 'employees'
@@ -51,3 +42,13 @@ class Clock_in(Base):
     rg = sa.Column(sa.String(255), unique=True, nullable=False)
     date =  sa.Column(sa.String(255), nullable=False)
     
+
+db = SessionLocal()
+if not DB_FILE.exists():
+    with app.app_context():
+        sa.create_all()
+        print('#################')
+        print('Created Database!')
+        print('#################')
+        Base.metadata.create_all(app)
+        
