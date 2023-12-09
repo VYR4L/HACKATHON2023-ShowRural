@@ -1,6 +1,5 @@
 import os
 import cv2
-import tkinter as tk
 import face_recognition
 from datetime import datetime
 from models import Employee, Visitor, Clock_in, db, ROOT_DIR
